@@ -1,0 +1,11 @@
+services:
+  demo-db:
+    image: postgres:16-alpine
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: demo
+    volumes:
+      - ./demo/seed.sql:/docker-entrypoint-initdb.d/seed.sql

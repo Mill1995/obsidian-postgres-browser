@@ -16,6 +16,8 @@ A desktop-only Obsidian plugin that connects to PostgreSQL databases and provide
 - **Resizable sidebar** + popout to a separate window
 - **Error display** -- PostgreSQL error codes, details, and hints rendered inline
 
+![PostgreSQL Browser sidebar showing schema tree and table data](demo/screenshots/hero.jpg)
+
 ## Architecture
 
 ```
@@ -132,13 +134,19 @@ On **Obsidian v1.11.4+**, connection strings are encrypted via the OS keychain (
 - Edited cells are highlighted; a **Save / Discard** bar appears at the bottom to batch-commit or revert changes
 - **Select rows** with checkboxes and click **Delete** to remove them (with confirmation)
 
+![Inline cell editing with pending changes](demo/screenshots/inline-editing.jpg)
+
 ### SQL Query tab
 - **Write SQL** in the query editor textarea
 - Press **Ctrl+Enter** (Cmd+Enter on Mac) or click **Run Query** to execute
 - Results appear in the scrollable table below, with row count and duration
 
+![SQL query results](demo/screenshots/query-mode.jpg)
+
 ### Schema tab
 - **Click a table** to see its full schema detail: columns with types and defaults, constraints, indexes, foreign key relationships, and estimated row count
+
+![Schema detail view showing columns, constraints, and indexes](demo/screenshots/schema-detail.jpg)
 
 ## Project structure
 

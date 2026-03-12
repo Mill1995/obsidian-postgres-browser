@@ -1,0 +1,419 @@
+/* ===== Layout ===== */
+.pg-browser {
+	display: grid;
+	grid-template-rows: auto 1fr;
+	height: 100%;
+	overflow: hidden;
+	padding: 0;
+}
+
+/* ===== Toolbar ===== */
+.pg-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 40px;
+	padding: 0 8px;
+	background: var(--background-secondary);
+	border-bottom: 1px solid var(--background-modifier-border);
+	gap: 8px;
+	flex-shrink: 0;
+}
+
+.pg-toolbar-left {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	flex: 1;
+}
+
+.pg-toolbar-selector {
+	flex-shrink: 0;
+}
+
+.pg-toolbar-info {
+	font-size: 0.85em;
+	color: var(--text-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.pg-toolbar-right {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-shrink: 0;
+}
+
+/* ===== Mode Tabs ===== */
+.pg-mode-group {
+	display: flex;
+	gap: 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.pg-mode-tab {
+	padding: 4px 12px;
+	font-size: 0.85em;
+	cursor: pointer;
+	background: transparent;
+	border: none;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.pg-mode-tab:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pg-mode-tab.pg-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+/* ===== Body ===== */
+.pg-body {
+	display: flex;
+	flex-direction: row;
+	overflow: hidden;
+	flex: 1;
+	min-height: 0;
+}
+
+/* ===== Sidebar ===== */
+.pg-sidebar {
+	width: 220px;
+	min-width: 160px;
+	max-width: 400px;
+	overflow-y: auto;
+	border-right: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+	padding: 4px;
+}
+
+/* ===== Resize Handle ===== */
+.pg-resize-handle {
+	width: 4px;
+	cursor: col-resize;
+	flex-shrink: 0;
+	background: transparent;
+	transition: background 0.15s;
+}
+
+.pg-resize-handle:hover {
+	background: var(--interactive-accent);
+}
+
+body.pg-resizing {
+	cursor: col-resize !important;
+	user-select: none !important;
+}
+
+/* ===== Main Content ===== */
+.pg-main {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	min-width: 0;
+}
+
+.pg-data-container,
+.pg-query-container {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	overflow: hidden;
+}
+
+/* ===== Data View ===== */
+.pg-data-view {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	overflow: hidden;
+}
+
+.pg-data-empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+}
+
+.pg-data-content {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	overflow: hidden;
+}
+
+.pg-breadcrumb {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 6px 12px;
+	font-size: 0.9em;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-primary-alt);
+	flex-shrink: 0;
+}
+
+.pg-breadcrumb-schema {
+	color: var(--text-muted);
+}
+
+.pg-breadcrumb-sep {
+	color: var(--text-faint);
+}
+
+.pg-breadcrumb-table {
+	font-weight: 600;
+}
+
+.pg-breadcrumb-count {
+	color: var(--text-muted);
+	font-size: 0.9em;
+	margin-left: 8px;
+}
+
+.pg-data-footer {
+	padding: 4px 12px;
+	font-size: 0.85em;
+	color: var(--text-muted);
+	border-top: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+}
+
+/* ===== Query View ===== */
+.pg-query-view {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	overflow: hidden;
+}
+
+/* ===== Connection Selector ===== */
+.pg-selector-wrapper {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+
+.pg-select {
+	padding: 4px 8px;
+}
+
+.pg-refresh-btn {
+	padding: 4px;
+}
+
+/* ===== Schema Tree ===== */
+.pg-schema-tree {
+	overflow-y: auto;
+}
+
+.pg-tree-header {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 4px;
+	cursor: pointer;
+	border-radius: 3px;
+	user-select: none;
+}
+
+.pg-tree-header:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pg-tree-children {
+	padding-left: 16px;
+}
+
+.pg-hidden {
+	display: none !important;
+}
+
+.pg-schema-name {
+	font-weight: 600;
+}
+
+.pg-count-badge {
+	color: var(--text-muted);
+	font-size: 0.85em;
+	margin-left: 4px;
+}
+
+.pg-table-icon {
+	display: flex;
+	align-items: center;
+}
+
+.pg-table-icon svg {
+	width: 14px;
+	height: 14px;
+}
+
+.pg-collapse-icon {
+	display: flex;
+	align-items: center;
+}
+
+.pg-collapse-icon svg {
+	width: 12px;
+	height: 12px;
+}
+
+.pg-column-node {
+	padding: 1px 4px 1px 20px;
+	font-size: 0.85em;
+	color: var(--text-muted);
+}
+
+.pg-column-pk {
+	color: var(--text-accent);
+	font-weight: 600;
+}
+
+/* ===== Query Editor ===== */
+.pg-query-editor {
+	padding: 8px 12px;
+	flex-shrink: 0;
+}
+
+.pg-query-textarea {
+	width: 100%;
+	font-family: var(--font-monospace);
+	font-size: 0.9em;
+	resize: vertical;
+	min-height: 80px;
+	padding: 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	box-sizing: border-box;
+}
+
+.pg-editor-btn-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 4px;
+}
+
+.pg-run-btn {
+	flex-shrink: 0;
+}
+
+.pg-query-status {
+	color: var(--text-muted);
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ===== Results Table ===== */
+.pg-results {
+	flex: 1;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	min-height: 60px;
+}
+
+.pg-results-status {
+	padding: 4px 12px;
+	font-size: 0.85em;
+	color: var(--text-muted);
+	flex-shrink: 0;
+}
+
+.pg-results-scroll {
+	overflow: auto;
+	flex: 1;
+}
+
+.pg-results-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.85em;
+	font-family: var(--font-monospace);
+}
+
+.pg-results-table th {
+	position: sticky;
+	top: 0;
+	background: var(--background-secondary);
+	font-weight: 600;
+	text-align: left;
+	padding: 4px 8px;
+	border-bottom: 2px solid var(--background-modifier-border);
+	white-space: nowrap;
+}
+
+.pg-results-table td {
+	padding: 3px 8px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	white-space: nowrap;
+	max-width: 300px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.pg-null-value {
+	color: var(--text-faint);
+	font-style: italic;
+}
+
+/* ===== Error Display ===== */
+.pg-error {
+	padding: 8px;
+	border: 1px solid var(--text-error);
+	border-radius: 4px;
+	color: var(--text-error);
+	background: var(--background-primary);
+	margin: 8px;
+}
+
+.pg-error strong {
+	display: block;
+	margin-bottom: 4px;
+}
+
+.pg-error-detail,
+.pg-error-hint {
+	font-size: 0.9em;
+	margin-top: 4px;
+}
+
+/* ===== Utility ===== */
+.pg-muted {
+	color: var(--text-muted);
+	font-style: italic;
+	padding: 4px;
+}
+
+/* ===== Parsed Connection Info (Settings) ===== */
+.pg-parsed-info {
+	margin-top: 4px;
+	font-size: 0.85em;
+	font-family: var(--font-monospace);
+}
+
+.pg-parsed-details {
+	display: block;
+	color: var(--text-muted);
+}
+
+.pg-parsed-warning {
+	display: block;
+	color: var(--text-warning);
+	margin-top: 2px;
+}

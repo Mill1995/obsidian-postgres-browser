@@ -1,0 +1,9 @@
+{
+	"id": "postgres-browser",
+	"name": "PostgreSQL Browser",
+	"version": "1.0.0",
+	"minAppVersion": "1.0.0",
+	"description": "Browse PostgreSQL schemas, preview table data, and run SQL queries.",
+	"author": "Yannick",
+	"isDesktopOnly": true
+}

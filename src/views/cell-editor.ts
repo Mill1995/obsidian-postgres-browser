@@ -1,5 +1,10 @@
 import type { ColumnInfo } from "../types";
 
+function stringifyValue(val: unknown): string {
+	if (typeof val === "object" && val !== null) return JSON.stringify(val);
+	return String(val);
+}
+
 export interface CellEditResult {
 	column: string;
 	newValue: unknown;
@@ -165,7 +170,7 @@ export class CellEditor {
 			cls: "pg-cell-textarea",
 		});
 		textarea.value =
-			this.originalValue === null ? "" : String(this.originalValue);
+			this.originalValue === null ? "" : stringifyValue(this.originalValue);
 		textarea.rows = 3;
 
 		textarea.addEventListener("keydown", (e) => {
@@ -186,7 +191,7 @@ export class CellEditor {
 			cls: "pg-cell-input",
 		});
 		input.value =
-			this.originalValue === null ? "" : String(this.originalValue);
+			this.originalValue === null ? "" : stringifyValue(this.originalValue);
 
 		input.addEventListener("keydown", (e) => {
 			if (e.key === "Enter") {
@@ -223,7 +228,7 @@ export class CellEditor {
 			this.td.textContent = "NULL";
 			this.td.addClass("pg-null-value");
 		} else {
-			this.td.textContent = String(value);
+			this.td.textContent = stringifyValue(value);
 			this.td.removeClass("pg-null-value");
 		}
 		this.td.addClass("pg-cell-pending");
@@ -288,6 +293,15 @@ export class CellEditor {
 			if (text.toLowerCase() === "false") return false;
 		}
 
+		// JSON/JSONB — parse back into an object
+		if (dt === "json" || dt === "jsonb" || udt === "json" || udt === "jsonb") {
+			try {
+				return JSON.parse(text);
+			} catch {
+				return text;
+			}
+		}
+
 		return text;
 	}
 
@@ -306,7 +320,7 @@ export class CellEditor {
 		if (udt === "json" || udt === "jsonb") return true;
 		// Use textarea if current value is multiline or long
 		if (this.originalValue !== null) {
-			const str = String(this.originalValue);
+			const str = stringifyValue(this.originalValue);
 			if (str.includes("\n") || str.length > 100) return true;
 		}
 		return false;

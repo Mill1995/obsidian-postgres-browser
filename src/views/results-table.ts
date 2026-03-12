@@ -149,7 +149,9 @@ export class ResultsTable {
 						? "NULL"
 						: val === undefined
 							? ""
-							: String(val);
+							: typeof val === "object"
+								? JSON.stringify(val)
+								: String(val);
 				const td = tr.createEl("td", { text: display });
 				if (val === null) td.addClass("pg-null-value");
 

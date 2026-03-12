@@ -15,8 +15,6 @@ export class PostgresBrowserSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl("h2", { text: "PostgreSQL Browser Settings" });
-
 		new Setting(containerEl)
 			.setName("Preview row limit")
 			.setDesc(`Maximum rows to fetch when previewing table data (max ${MAX_PREVIEW_ROW_LIMIT.toLocaleString()})`)
@@ -49,21 +47,20 @@ export class PostgresBrowserSettingTab extends PluginSettingTab {
 					})
 			);
 
-		containerEl.createEl("h3", { text: "Database Connections" });
+		new Setting(containerEl).setName("Database Connections").setHeading();
 
 		const notice = containerEl.createEl("p");
 		if (this.plugin.secretStorage.available) {
 			notice.setText(
 				"Connection strings are encrypted using your OS secure storage (keychain)."
 			);
-			notice.style.color = "var(--text-success)";
+			notice.addClass("pg-notice-secure");
 		} else {
 			notice.setText(
 				"Connection strings are stored in plaintext in your vault's plugin data folder. Upgrade Obsidian to v1.11.4+ for OS keychain encryption."
 			);
-			notice.style.color = "var(--text-warning)";
+			notice.addClass("pg-notice-insecure");
 		}
-		notice.style.marginBottom = "12px";
 
 		for (const conn of this.plugin.settings.connections) {
 			this.renderConnection(containerEl, conn);
@@ -108,7 +105,7 @@ export class PostgresBrowserSettingTab extends PluginSettingTab {
 			.setDesc("postgresql://user:password@host:port/database")
 			.addText((text) => {
 				text.inputEl.type = "password";
-				text.inputEl.style.width = "100%";
+				text.inputEl.addClass("pg-conn-string-input");
 				text.setValue(conn.connectionString).onChange(async (value) => {
 					conn.connectionString = value.trim();
 					await this.plugin.saveSettings();

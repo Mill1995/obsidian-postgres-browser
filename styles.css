@@ -781,6 +781,21 @@ body.pg-resizing {
 }
 
 /* ===== Parsed Connection Info (Settings) ===== */
+/* ===== Settings Notices ===== */
+.pg-notice-secure {
+	color: var(--text-success);
+	margin-bottom: 12px;
+}
+
+.pg-notice-insecure {
+	color: var(--text-warning);
+	margin-bottom: 12px;
+}
+
+.pg-conn-string-input {
+	width: 100%;
+}
+
 .pg-parsed-info {
 	margin-top: 4px;
 	font-size: 0.85em;

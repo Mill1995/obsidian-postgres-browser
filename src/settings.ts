@@ -86,6 +86,8 @@ export class PostgresBrowserSettingTab extends PluginSettingTab {
 		);
 	}
 
+	private plaintextWarningShown = false;
+
 	private renderConnection(
 		containerEl: HTMLElement,
 		conn: ConnectionConfig
@@ -111,6 +113,10 @@ export class PostgresBrowserSettingTab extends PluginSettingTab {
 					conn.connectionString = value.trim();
 					await this.plugin.saveSettings();
 					updateParsedInfo(conn.connectionString);
+					if (!this.plugin.secretStorage.available && conn.connectionString && !this.plaintextWarningShown) {
+						this.plaintextWarningShown = true;
+						new Notice("Warning: connection string will be stored in plaintext. Upgrade Obsidian to v1.11.4+ for encrypted storage.");
+					}
 				});
 			});
 

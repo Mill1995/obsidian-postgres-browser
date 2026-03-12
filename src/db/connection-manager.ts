@@ -8,7 +8,12 @@ interface CachedConnection {
 }
 
 function isLoopbackHost(connectionString: string): boolean {
-	return /localhost|127\.0\.0\.1|::1/.test(connectionString);
+	try {
+		const { hostname } = new URL(connectionString);
+		return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+	} catch {
+		return false;
+	}
 }
 
 /**

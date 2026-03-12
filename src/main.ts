@@ -1,6 +1,6 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
 import type { PluginSettings } from "./types";
-import { DEFAULT_SETTINGS, VIEW_TYPE_PG_BROWSER } from "./constants";
+import { DEFAULT_SETTINGS, MAX_PREVIEW_ROW_LIMIT, VIEW_TYPE_PG_BROWSER } from "./constants";
 import { PostgresBrowserSettingTab } from "./settings";
 import { PostgresBrowserView } from "./views/database-view";
 import { ConnectionManager } from "./db/connection-manager";
@@ -53,6 +53,10 @@ export default class PostgresBrowserPlugin extends Plugin {
 			DEFAULT_SETTINGS,
 			await this.loadData()
 		);
+
+		// Clamp numeric settings to valid ranges (protects against tampered data.json)
+		this.settings.queryTimeoutSeconds = Math.max(1, Math.min(300, Math.round(this.settings.queryTimeoutSeconds || DEFAULT_SETTINGS.queryTimeoutSeconds)));
+		this.settings.previewRowLimit = Math.max(1, Math.min(MAX_PREVIEW_ROW_LIMIT, Math.round(this.settings.previewRowLimit || DEFAULT_SETTINGS.previewRowLimit)));
 
 		let needsSave = false;
 

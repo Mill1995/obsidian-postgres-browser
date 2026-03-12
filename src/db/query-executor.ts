@@ -12,7 +12,7 @@ export class QueryExecutor {
 		const timeoutMs = Math.max(1, Math.round(timeoutSeconds)) * 1000;
 
 		try {
-			await sql.unsafe(`SET statement_timeout = ${timeoutMs}`);
+			await sql.unsafe(`SET statement_timeout = $1`, [timeoutMs]);
 			try {
 				const result = await sql.unsafe(queryText);
 				const duration = performance.now() - start;
@@ -32,7 +32,7 @@ export class QueryExecutor {
 					command: result.command ?? "UNKNOWN",
 				};
 			} finally {
-				await sql.unsafe("SET statement_timeout = 0").catch(() => {});
+				await sql.unsafe("SET statement_timeout = $1", [0]).catch(() => {});
 			}
 		} catch (err: unknown) {
 			throw this.normalizeError(err);

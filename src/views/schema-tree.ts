@@ -133,32 +133,36 @@ export class SchemaTree {
 
 		// If this node was previously expanded, load columns
 		if (isExpanded && table.columns.length === 0) {
-			this.loadColumnsForTable(schemaName, table, childrenEl);
+			void this.loadColumnsForTable(schemaName, table, childrenEl);
 		} else if (isExpanded && table.columns.length > 0) {
 			this.renderColumns(childrenEl, table.columns);
 		}
 
-		header.addEventListener("click", async () => {
+		header.addEventListener("click", () => {
 			this.onTableSelect(schemaName, table.name);
 
+			const toggleNode = () => {
+				const isHidden = childrenEl.hasClass("pg-hidden");
+				childrenEl.toggleClass("pg-hidden", !isHidden);
+				setIcon(
+					collapseIcon,
+					isHidden ? "chevron-down" : "chevron-right"
+				);
+				if (isHidden) {
+					this.expandedNodes.add(tableKey);
+				} else {
+					this.expandedNodes.delete(tableKey);
+				}
+			};
+
 			if (table.columns.length === 0) {
-				await this.loadColumnsForTable(
+				void this.loadColumnsForTable(
 					schemaName,
 					table,
 					childrenEl
-				);
-			}
-
-			const isHidden = childrenEl.hasClass("pg-hidden");
-			childrenEl.toggleClass("pg-hidden", !isHidden);
-			setIcon(
-				collapseIcon,
-				isHidden ? "chevron-down" : "chevron-right"
-			);
-			if (isHidden) {
-				this.expandedNodes.add(tableKey);
+				).then(toggleNode);
 			} else {
-				this.expandedNodes.delete(tableKey);
+				toggleNode();
 			}
 		});
 	}

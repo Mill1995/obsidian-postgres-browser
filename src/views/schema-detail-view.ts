@@ -11,7 +11,7 @@ export class SchemaDetailView {
 
 		this.emptyEl = this.container.createDiv({ cls: "pg-data-empty" });
 		this.emptyEl.createEl("p", {
-			text: "Select a table and click the Schema tab to view its structure.",
+			text: "Select a table and click the schema tab to view its structure.",
 			cls: "pg-muted",
 		});
 

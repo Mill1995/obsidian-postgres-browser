@@ -47,7 +47,7 @@ export class PostgresBrowserSettingTab extends PluginSettingTab {
 					})
 			);
 
-		new Setting(containerEl).setName("Database Connections").setHeading();
+		new Setting(containerEl).setName("Database connections").setHeading();
 
 		const notice = containerEl.createEl("p");
 		if (this.plugin.secretStorage.available) {
@@ -68,12 +68,12 @@ export class PostgresBrowserSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl).addButton((btn) =>
 			btn
-				.setButtonText("Add Connection")
+				.setButtonText("Add connection")
 				.setCta()
 				.onClick(async () => {
 					const newConn: ConnectionConfig = {
 						id: crypto.randomUUID(),
-						name: "New Connection",
+						name: "New connection",
 						connectionString: "",
 					};
 					this.plugin.settings.connections.push(newConn);
@@ -162,7 +162,7 @@ export class PostgresBrowserSettingTab extends PluginSettingTab {
 
 		new Setting(section)
 			.addButton((btn) =>
-				btn.setButtonText("Test Connection").onClick(async () => {
+				btn.setButtonText("Test connection").onClick(async () => {
 					if (!conn.connectionString) {
 						new Notice("Please enter a connection string first.");
 						return;
@@ -179,7 +179,7 @@ export class PostgresBrowserSettingTab extends PluginSettingTab {
 							`Connection failed: ${err instanceof Error ? err.message : String(err)}`
 						);
 					} finally {
-						btn.setButtonText("Test Connection");
+						btn.setButtonText("Test connection");
 						btn.setDisabled(false);
 					}
 				})

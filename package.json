@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-postgres-browser",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "PostgreSQL browser sidebar plugin for Obsidian",
 	"license": "MIT",
 	"main": "main.js",

@@ -1,9 +1,14 @@
 import postgres, { Sql } from "postgres";
 import type { ConnectionConfig } from "../types";
+import { quoteIdent } from "./sql-utils";
 
 interface CachedConnection {
 	sql: Sql;
 	connectionString: string;
+}
+
+function isLoopbackHost(connectionString: string): boolean {
+	return /localhost|127\.0\.0\.1|::1/.test(connectionString);
 }
 
 /**
@@ -53,23 +58,20 @@ export class ConnectionManager {
 			}
 		}
 
-		const isLocalhost =
-			cleanedStr.includes("localhost") ||
-			cleanedStr.includes("127.0.0.1");
+		const isLocalhost = isLoopbackHost(cleanedStr);
 
 		const sql = postgres(cleanedStr, {
 			max: 3,
 			idle_timeout: 300,
 			connect_timeout: 10,
-			ssl: config.ssl ?? (isLocalhost ? false : "prefer"),
+			ssl: config.ssl ?? (isLocalhost ? false : "require"),
 			prepare: true,
 		});
 
 		// If a schema was extracted from the connection string, set search_path
 		const effectiveSchema = config.schema ?? schema;
 		if (effectiveSchema) {
-			const escaped = effectiveSchema.replace(/"/g, '""');
-			await sql.unsafe(`SET search_path TO "${escaped}", public`);
+			await sql.unsafe(`SET search_path TO ${quoteIdent(effectiveSchema)}, public`);
 		}
 
 		this.connections.set(config.id, {
@@ -84,15 +86,13 @@ export class ConnectionManager {
 			config.connectionString
 		);
 
-		const isLocalhost =
-			cleanedStr.includes("localhost") ||
-			cleanedStr.includes("127.0.0.1");
+		const isLocalhost = isLoopbackHost(cleanedStr);
 
 		const sql = postgres(cleanedStr, {
 			max: 1,
 			connect_timeout: 10,
 			idle_timeout: 5,
-			ssl: config.ssl ?? (isLocalhost ? false : "prefer"),
+			ssl: config.ssl ?? (isLocalhost ? false : "require"),
 		});
 
 		try {

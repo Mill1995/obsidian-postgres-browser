@@ -1,32 +1,39 @@
 import type { Sql } from "postgres";
 import type { QueryResult, QueryError } from "../types";
+import { quoteIdent } from "./sql-utils";
 
 export class QueryExecutor {
 	async execute(
 		sql: Sql,
 		queryText: string,
-		_timeoutSeconds: number
+		timeoutSeconds: number
 	): Promise<QueryResult> {
 		const start = performance.now();
+		const timeoutMs = Math.max(1, Math.round(timeoutSeconds)) * 1000;
 
 		try {
-			const result = await sql.unsafe(queryText);
-			const duration = performance.now() - start;
+			await sql.unsafe(`SET statement_timeout = ${timeoutMs}`);
+			try {
+				const result = await sql.unsafe(queryText);
+				const duration = performance.now() - start;
 
-			const columns =
-				result.length > 0
-					? Object.keys(result[0])
-					: result.columns?.map(
-							(c: { name: string }) => c.name
-						) ?? [];
+				const columns =
+					result.length > 0
+						? Object.keys(result[0])
+						: result.columns?.map(
+								(c: { name: string }) => c.name
+							) ?? [];
 
-			return {
-				columns,
-				rows: result as Record<string, unknown>[],
-				rowCount: result.count ?? result.length,
-				duration: Math.round(duration),
-				command: result.command ?? "UNKNOWN",
-			};
+				return {
+					columns,
+					rows: result as Record<string, unknown>[],
+					rowCount: result.count ?? result.length,
+					duration: Math.round(duration),
+					command: result.command ?? "UNKNOWN",
+				};
+			} finally {
+				await sql.unsafe("SET statement_timeout = 0").catch(() => {});
+			}
 		} catch (err: unknown) {
 			throw this.normalizeError(err);
 		}
@@ -40,7 +47,7 @@ export class QueryExecutor {
 	): Promise<QueryResult> {
 		const start = performance.now();
 		const result = await sql.unsafe(
-			`SELECT * FROM "${schema}"."${table}" LIMIT ${limit}`
+			`SELECT * FROM ${quoteIdent(schema)}.${quoteIdent(table)} LIMIT ${limit}`
 		);
 		const duration = performance.now() - start;
 
@@ -70,12 +77,12 @@ export class QueryExecutor {
 			throw new Error("Cannot update: no primary key columns provided");
 		}
 
-		const setCols = `"${targetColumn}" = $1`;
+		const setCols = `${quoteIdent(targetColumn)} = $1`;
 		const whereParts = pkColumns.map(
-			(_, i) => `"${pkColumns[i].name}" = $${i + 2}`
+			(_, i) => `${quoteIdent(pkColumns[i].name)} = $${i + 2}`
 		);
 		const whereClause = whereParts.join(" AND ");
-		const query = `UPDATE "${schema}"."${table}" SET ${setCols} WHERE ${whereClause}`;
+		const query = `UPDATE ${quoteIdent(schema)}.${quoteIdent(table)} SET ${setCols} WHERE ${whereClause}`;
 		const params = [newValue, ...pkColumns.map((pk) => pk.value)];
 
 		const result = await sql.unsafe(query, params as never[]);
@@ -104,9 +111,9 @@ export class QueryExecutor {
 		}
 
 		const whereParts = pkColumns.map(
-			(_, i) => `"${pkColumns[i].name}" = $${i + 1}`
+			(_, i) => `${quoteIdent(pkColumns[i].name)} = $${i + 1}`
 		);
-		const query = `DELETE FROM "${schema}"."${table}" WHERE ${whereParts.join(" AND ")}`;
+		const query = `DELETE FROM ${quoteIdent(schema)}.${quoteIdent(table)} WHERE ${whereParts.join(" AND ")}`;
 		const params = pkColumns.map((pk) => pk.value);
 
 		const result = await sql.unsafe(query, params as never[]);

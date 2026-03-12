@@ -1,6 +1,7 @@
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import type PostgresBrowserPlugin from "./main";
 import type { ConnectionConfig } from "./types";
+import { MAX_PREVIEW_ROW_LIMIT } from "./constants";
 
 export class PostgresBrowserSettingTab extends PluginSettingTab {
 	plugin: PostgresBrowserPlugin;
@@ -18,13 +19,13 @@ export class PostgresBrowserSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Preview row limit")
-			.setDesc("Maximum rows to fetch when previewing table data")
+			.setDesc(`Maximum rows to fetch when previewing table data (max ${MAX_PREVIEW_ROW_LIMIT.toLocaleString()})`)
 			.addText((text) =>
 				text
 					.setValue(String(this.plugin.settings.previewRowLimit))
 					.onChange(async (value) => {
 						const num = parseInt(value, 10);
-						if (!isNaN(num) && num > 0) {
+						if (!isNaN(num) && num > 0 && num <= MAX_PREVIEW_ROW_LIMIT) {
 							this.plugin.settings.previewRowLimit = num;
 							await this.plugin.saveSettings();
 						}

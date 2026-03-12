@@ -47,7 +47,8 @@ export class QueryExecutor {
 	): Promise<QueryResult> {
 		const start = performance.now();
 		const result = await sql.unsafe(
-			`SELECT * FROM ${quoteIdent(schema)}.${quoteIdent(table)} LIMIT ${limit}`
+			`SELECT * FROM ${quoteIdent(schema)}.${quoteIdent(table)} LIMIT $1`,
+			[limit]
 		);
 		const duration = performance.now() - start;
 

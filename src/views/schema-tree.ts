@@ -7,6 +7,7 @@ export class SchemaTree {
 	private plugin: PostgresBrowserPlugin;
 	private onTableSelect: (schema: string, table: string) => void;
 	private schemaData: SchemaInfo[] = [];
+	private expandedNodes: Set<string> = new Set();
 
 	constructor(
 		container: HTMLElement,
@@ -39,6 +40,7 @@ export class SchemaTree {
 
 	showEmpty(): void {
 		this.container.empty();
+		this.expandedNodes.clear();
 		this.container.createEl("p", {
 			text: "Select a connection above.",
 			cls: "pg-muted",
@@ -64,13 +66,16 @@ export class SchemaTree {
 	}
 
 	private renderSchemaNode(parent: HTMLElement, schema: SchemaInfo): void {
+		const schemaKey = schema.name;
+		const isExpanded = this.expandedNodes.has(schemaKey);
+
 		const schemaEl = parent.createDiv({
 			cls: "pg-tree-node pg-schema-node",
 		});
 		const header = schemaEl.createDiv({ cls: "pg-tree-header" });
 
 		const collapseIcon = header.createSpan({ cls: "pg-collapse-icon" });
-		setIcon(collapseIcon, "chevron-right");
+		setIcon(collapseIcon, isExpanded ? "chevron-down" : "chevron-right");
 
 		header.createSpan({ text: schema.name, cls: "pg-schema-name" });
 		header.createSpan({
@@ -79,7 +84,7 @@ export class SchemaTree {
 		});
 
 		const childrenEl = schemaEl.createDiv({
-			cls: "pg-tree-children pg-hidden",
+			cls: `pg-tree-children${isExpanded ? "" : " pg-hidden"}`,
 		});
 
 		header.addEventListener("click", () => {
@@ -89,6 +94,11 @@ export class SchemaTree {
 				collapseIcon,
 				isHidden ? "chevron-down" : "chevron-right"
 			);
+			if (isHidden) {
+				this.expandedNodes.add(schemaKey);
+			} else {
+				this.expandedNodes.delete(schemaKey);
+			}
 		});
 
 		for (const table of schema.tables) {
@@ -101,13 +111,16 @@ export class SchemaTree {
 		schemaName: string,
 		table: TableInfo
 	): void {
+		const tableKey = `${schemaName}.${table.name}`;
+		const isExpanded = this.expandedNodes.has(tableKey);
+
 		const tableEl = parent.createDiv({
 			cls: "pg-tree-node pg-table-node",
 		});
 		const header = tableEl.createDiv({ cls: "pg-tree-header" });
 
 		const collapseIcon = header.createSpan({ cls: "pg-collapse-icon" });
-		setIcon(collapseIcon, "chevron-right");
+		setIcon(collapseIcon, isExpanded ? "chevron-down" : "chevron-right");
 
 		const tableIcon = header.createSpan({ cls: "pg-table-icon" });
 		setIcon(tableIcon, table.type === "VIEW" ? "eye" : "table");
@@ -115,35 +128,25 @@ export class SchemaTree {
 		header.createSpan({ text: table.name, cls: "pg-table-name" });
 
 		const childrenEl = tableEl.createDiv({
-			cls: "pg-tree-children pg-hidden",
+			cls: `pg-tree-children${isExpanded ? "" : " pg-hidden"}`,
 		});
+
+		// If this node was previously expanded, load columns
+		if (isExpanded && table.columns.length === 0) {
+			this.loadColumnsForTable(schemaName, table, childrenEl);
+		} else if (isExpanded && table.columns.length > 0) {
+			this.renderColumns(childrenEl, table.columns);
+		}
 
 		header.addEventListener("click", async () => {
 			this.onTableSelect(schemaName, table.name);
 
 			if (table.columns.length === 0) {
-				const activeConn = this.getActiveConfig();
-				if (activeConn) {
-					try {
-						const sql =
-							await this.plugin.connectionManager.getConnection(
-								activeConn
-							);
-						table.columns =
-							await this.plugin.schemaIntrospection.getColumns(
-								sql,
-								schemaName,
-								table.name
-							);
-						this.renderColumns(childrenEl, table.columns);
-					} catch {
-						childrenEl.empty();
-						childrenEl.createEl("p", {
-							text: "Failed to load columns.",
-							cls: "pg-muted",
-						});
-					}
-				}
+				await this.loadColumnsForTable(
+					schemaName,
+					table,
+					childrenEl
+				);
 			}
 
 			const isHidden = childrenEl.hasClass("pg-hidden");
@@ -152,7 +155,39 @@ export class SchemaTree {
 				collapseIcon,
 				isHidden ? "chevron-down" : "chevron-right"
 			);
+			if (isHidden) {
+				this.expandedNodes.add(tableKey);
+			} else {
+				this.expandedNodes.delete(tableKey);
+			}
 		});
+	}
+
+	private async loadColumnsForTable(
+		schemaName: string,
+		table: TableInfo,
+		childrenEl: HTMLElement
+	): Promise<void> {
+		const activeConn = this.getActiveConfig();
+		if (!activeConn) return;
+
+		try {
+			const sql =
+				await this.plugin.connectionManager.getConnection(activeConn);
+			table.columns =
+				await this.plugin.schemaIntrospection.getColumns(
+					sql,
+					schemaName,
+					table.name
+				);
+			this.renderColumns(childrenEl, table.columns);
+		} catch {
+			childrenEl.empty();
+			childrenEl.createEl("p", {
+				text: "Failed to load columns.",
+				cls: "pg-muted",
+			});
+		}
 	}
 
 	private renderColumns(parent: HTMLElement, columns: ColumnInfo[]): void {

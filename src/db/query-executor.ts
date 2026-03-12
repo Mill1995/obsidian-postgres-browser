@@ -58,6 +58,67 @@ export class QueryExecutor {
 		};
 	}
 
+	async updateCell(
+		sql: Sql,
+		schema: string,
+		table: string,
+		pkColumns: { name: string; value: unknown }[],
+		targetColumn: string,
+		newValue: unknown
+	): Promise<void> {
+		if (pkColumns.length === 0) {
+			throw new Error("Cannot update: no primary key columns provided");
+		}
+
+		const setCols = `"${targetColumn}" = $1`;
+		const whereParts = pkColumns.map(
+			(_, i) => `"${pkColumns[i].name}" = $${i + 2}`
+		);
+		const whereClause = whereParts.join(" AND ");
+		const query = `UPDATE "${schema}"."${table}" SET ${setCols} WHERE ${whereClause}`;
+		const params = [newValue, ...pkColumns.map((pk) => pk.value)];
+
+		const result = await sql.unsafe(query, params as never[]);
+		const count = result.count ?? 0;
+
+		if (count === 0) {
+			throw new Error(
+				"No rows updated. The row may have been deleted or modified."
+			);
+		}
+		if (count > 1) {
+			throw new Error(
+				`Unexpected: ${count} rows were updated instead of 1.`
+			);
+		}
+	}
+
+	async deleteRow(
+		sql: Sql,
+		schema: string,
+		table: string,
+		pkColumns: { name: string; value: unknown }[]
+	): Promise<void> {
+		if (pkColumns.length === 0) {
+			throw new Error("Cannot delete: no primary key columns provided");
+		}
+
+		const whereParts = pkColumns.map(
+			(_, i) => `"${pkColumns[i].name}" = $${i + 1}`
+		);
+		const query = `DELETE FROM "${schema}"."${table}" WHERE ${whereParts.join(" AND ")}`;
+		const params = pkColumns.map((pk) => pk.value);
+
+		const result = await sql.unsafe(query, params as never[]);
+		const count = result.count ?? 0;
+
+		if (count === 0) {
+			throw new Error(
+				"No rows deleted. The row may have already been deleted."
+			);
+		}
+	}
+
 	private normalizeError(err: unknown): QueryError {
 		if (err instanceof Error) {
 			const pgErr = err as unknown as Record<string, unknown>;

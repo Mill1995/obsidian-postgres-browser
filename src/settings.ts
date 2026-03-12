@@ -50,11 +50,18 @@ export class PostgresBrowserSettingTab extends PluginSettingTab {
 
 		containerEl.createEl("h3", { text: "Database Connections" });
 
-		const notice = containerEl.createEl("p", {
-			text: "Connection strings are stored in plaintext in your vault's plugin data folder.",
-			cls: "setting-item-description",
-		});
-		notice.style.color = "var(--text-warning)";
+		const notice = containerEl.createEl("p");
+		if (this.plugin.secretStorage.available) {
+			notice.setText(
+				"Connection strings are encrypted using your OS secure storage (keychain)."
+			);
+			notice.style.color = "var(--text-success)";
+		} else {
+			notice.setText(
+				"Connection strings are stored in plaintext in your vault's plugin data folder. Upgrade Obsidian to v1.11.4+ for OS keychain encryption."
+			);
+			notice.style.color = "var(--text-warning)";
+		}
 		notice.style.marginBottom = "12px";
 
 		for (const conn of this.plugin.settings.connections) {
@@ -181,6 +188,7 @@ export class PostgresBrowserSettingTab extends PluginSettingTab {
 						await this.plugin.connectionManager.disconnect(
 							conn.id
 						);
+						this.plugin.secretStorage.remove(conn.id);
 						this.plugin.settings.connections =
 							this.plugin.settings.connections.filter(
 								(c) => c.id !== conn.id

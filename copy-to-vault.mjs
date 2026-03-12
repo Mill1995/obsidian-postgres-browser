@@ -10,11 +10,16 @@ try {
 	}
 } catch {}
 
-const dest = process.env.VAULT_PLUGIN_DIR;
-if (!dest) {
-	console.error("VAULT_PLUGIN_DIR is not set. Create a .env file with:\nVAULT_PLUGIN_DIR=/path/to/vault/.obsidian/plugins/postgres-browser");
+const vault = process.env.OBSIDIAN_VAULT;
+if (!vault) {
+	console.error(
+		"OBSIDIAN_VAULT is not set. Create a .env file with:\nOBSIDIAN_VAULT=/path/to/vault"
+	);
 	process.exit(1);
 }
+
+const manifest = JSON.parse(readFileSync("manifest.json", "utf8"));
+const dest = join(vault, ".obsidian", "plugins", manifest.id);
 
 mkdirSync(dest, { recursive: true });
 

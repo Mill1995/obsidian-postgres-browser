@@ -1,3 +1,4 @@
+import { setIcon } from "obsidian";
 import type PostgresBrowserPlugin from "../main";
 import type { ViewMode } from "../types";
 import { ConnectionSelector } from "./connection-selector";
@@ -6,6 +7,7 @@ export class Toolbar {
 	private connectionInfoEl: HTMLSpanElement;
 	private dataTabBtn: HTMLButtonElement;
 	private queryTabBtn: HTMLButtonElement;
+	private schemaTabBtn: HTMLButtonElement;
 	private currentMode: ViewMode = "data";
 	connectionSelector: ConnectionSelector;
 
@@ -14,7 +16,8 @@ export class Toolbar {
 		plugin: PostgresBrowserPlugin,
 		onConnectionChanged: (id: string | null) => void,
 		onRefresh: () => void,
-		onModeChange: (mode: ViewMode) => void
+		onModeChange: (mode: ViewMode) => void,
+		onPopout: () => void
 	) {
 		container.addClass("pg-toolbar");
 
@@ -55,6 +58,22 @@ export class Toolbar {
 			this.setMode("query");
 			onModeChange("query");
 		});
+
+		this.schemaTabBtn = modeGroup.createEl("button", {
+			text: "Schema",
+			cls: "pg-mode-tab",
+		});
+		this.schemaTabBtn.addEventListener("click", () => {
+			this.setMode("schema");
+			onModeChange("schema");
+		});
+
+		const popoutBtn = rightGroup.createEl("button", {
+			cls: "pg-popout-btn clickable-icon",
+			attr: { "aria-label": "Open in new window" },
+		});
+		setIcon(popoutBtn, "arrow-up-right");
+		popoutBtn.addEventListener("click", onPopout);
 	}
 
 	setConnectionInfo(text: string): void {
@@ -65,6 +84,7 @@ export class Toolbar {
 		this.currentMode = mode;
 		this.dataTabBtn.toggleClass("pg-active", mode === "data");
 		this.queryTabBtn.toggleClass("pg-active", mode === "query");
+		this.schemaTabBtn.toggleClass("pg-active", mode === "schema");
 	}
 
 	getMode(): ViewMode {

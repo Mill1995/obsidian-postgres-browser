@@ -6,6 +6,7 @@ import { Toolbar } from "./toolbar";
 import { SchemaTree } from "./schema-tree";
 import { DataView } from "./data-view";
 import { QueryView } from "./query-view";
+import { SchemaDetailView } from "./schema-detail-view";
 import { ResizeHandle } from "./resize-handle";
 
 export class PostgresBrowserView extends ItemView {
@@ -14,8 +15,11 @@ export class PostgresBrowserView extends ItemView {
 	private schemaTree!: SchemaTree;
 	private dataView!: DataView;
 	private queryView!: QueryView;
+	private schemaDetailView!: SchemaDetailView;
 	private dataContainer!: HTMLElement;
 	private queryContainer!: HTMLElement;
+	private schemaContainer!: HTMLElement;
+	private currentTable: { schema: string; table: string } | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: PostgresBrowserPlugin) {
 		super(leaf);
@@ -54,7 +58,8 @@ export class PostgresBrowserView extends ItemView {
 			this.plugin,
 			(id) => this.onConnectionChanged(id),
 			() => this.onRefresh(),
-			(mode) => this.switchMode(mode)
+			(mode) => this.switchMode(mode),
+			() => this.onPopout()
 		);
 
 		// Body: sidebar | resize handle | main
@@ -90,6 +95,11 @@ export class PostgresBrowserView extends ItemView {
 			this.onRunQuery(queryText)
 		);
 
+		this.schemaContainer = main.createDiv({
+			cls: "pg-schema-container pg-hidden",
+		});
+		this.schemaDetailView = new SchemaDetailView(this.schemaContainer);
+
 		// Start in data mode
 		this.switchMode("data");
 	}
@@ -98,6 +108,15 @@ export class PostgresBrowserView extends ItemView {
 		this.toolbar.setMode(mode);
 		this.dataContainer.toggleClass("pg-hidden", mode !== "data");
 		this.queryContainer.toggleClass("pg-hidden", mode !== "query");
+		this.schemaContainer.toggleClass("pg-hidden", mode !== "schema");
+
+		// Load schema detail when switching to schema tab with a table selected
+		if (mode === "schema" && this.currentTable) {
+			this.loadSchemaDetail(
+				this.currentTable.schema,
+				this.currentTable.table
+			);
+		}
 	}
 
 	private async onConnectionChanged(
@@ -113,6 +132,8 @@ export class PostgresBrowserView extends ItemView {
 		await this.plugin.saveSettings();
 
 		this.dataView.clear();
+		this.schemaDetailView.clear();
+		this.currentTable = null;
 
 		if (connectionId) {
 			await this.loadSchemaTree();
@@ -123,6 +144,8 @@ export class PostgresBrowserView extends ItemView {
 	}
 
 	private async onRefresh(): Promise<void> {
+		this.toolbar.connectionSelector.refresh();
+
 		if (this.plugin.settings.activeConnectionId) {
 			const id = this.plugin.settings.activeConnectionId;
 			await this.plugin.connectionManager.disconnect(id);
@@ -173,25 +196,124 @@ export class PostgresBrowserView extends ItemView {
 		const config = this.getActiveConfig();
 		if (!config) return;
 
-		// Auto-switch to data mode
-		this.switchMode("data");
+		this.currentTable = { schema, table };
 
+		// Auto-switch to data mode (unless on schema tab)
+		const currentMode = this.toolbar.getMode();
+		if (currentMode === "query") {
+			this.switchMode("data");
+		} else if (currentMode === "schema") {
+			// Reload schema detail for new table
+			this.loadSchemaDetail(schema, table);
+		}
+
+		// Always load data preview
 		try {
 			const sql =
 				await this.plugin.connectionManager.getConnection(config);
-			const result = await this.plugin.queryExecutor.previewTable(
-				sql,
+
+			// Fetch data, columns, and row count estimate in parallel
+			const [result, detail] = await Promise.all([
+				this.plugin.queryExecutor.previewTable(
+					sql,
+					schema,
+					table,
+					this.plugin.settings.previewRowLimit
+				),
+				this.plugin.schemaIntrospection.getTableDetail(
+					sql,
+					schema,
+					table
+				),
+			]);
+
+			const columnMeta = detail.columns;
+			const pkColumns = columnMeta
+				.filter((c) => c.isPrimaryKey)
+				.map((c) => c.name);
+
+			// Set up editing config
+			this.dataView.resultsTable.setEditConfig({
 				schema,
 				table,
-				this.plugin.settings.previewRowLimit
+				columnMeta,
+				pkColumns,
+				onCellUpdate: async (
+					column: string,
+					newValue: unknown,
+					row: Record<string, unknown>
+				) => {
+					const pkValues = pkColumns.map((pk) => ({
+						name: pk,
+						value: row[pk],
+					}));
+					await this.plugin.queryExecutor.updateCell(
+						sql,
+						schema,
+						table,
+						pkValues,
+						column,
+						newValue
+					);
+				},
+				onRowDelete: async (row: Record<string, unknown>) => {
+					const pkValues = pkColumns.map((pk) => ({
+						name: pk,
+						value: row[pk],
+					}));
+					await this.plugin.queryExecutor.deleteRow(
+						sql,
+						schema,
+						table,
+						pkValues
+					);
+				},
+			});
+
+			this.dataView.showTable(
+				schema,
+				table,
+				result,
+				columnMeta,
+				detail.estimatedRowCount
 			);
-			this.dataView.showTable(schema, table, result);
 		} catch (err) {
 			const qErr = err as QueryError;
 			new Notice(
 				`Preview failed: ${qErr.message || String(err)}`
 			);
 		}
+	}
+
+	private async loadSchemaDetail(
+		schema: string,
+		table: string
+	): Promise<void> {
+		const config = this.getActiveConfig();
+		if (!config) return;
+
+		this.schemaDetailView.showLoading();
+
+		try {
+			const sql =
+				await this.plugin.connectionManager.getConnection(config);
+			const detail =
+				await this.plugin.schemaIntrospection.getTableDetail(
+					sql,
+					schema,
+					table
+				);
+			this.schemaDetailView.showDetail(detail);
+		} catch (err) {
+			const message =
+				err instanceof Error ? err.message : String(err);
+			new Notice(`Failed to load schema: ${message}`);
+			this.schemaDetailView.showEmpty();
+		}
+	}
+
+	private async onPopout(): Promise<void> {
+		await this.plugin.activateViewInWindow();
 	}
 
 	private async onRunQuery(queryText: string): Promise<void> {

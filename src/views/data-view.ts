@@ -1,10 +1,10 @@
-import type { QueryResult } from "../types";
+import type { QueryResult, ColumnInfo } from "../types";
 import { ResultsTable } from "./results-table";
 
 export class DataView {
 	private container: HTMLElement;
 	private breadcrumbEl: HTMLElement;
-	private resultsTable: ResultsTable;
+	resultsTable: ResultsTable;
 	private footerEl: HTMLElement;
 	private emptyEl: HTMLElement;
 	private contentEl: HTMLElement;
@@ -35,7 +35,13 @@ export class DataView {
 		this.footerEl = this.contentEl.createDiv({ cls: "pg-data-footer" });
 	}
 
-	showTable(schema: string, table: string, result: QueryResult): void {
+	showTable(
+		schema: string,
+		table: string,
+		result: QueryResult,
+		columnMeta?: ColumnInfo[],
+		totalEstimate?: number
+	): void {
 		this.emptyEl.addClass("pg-hidden");
 		this.contentEl.removeClass("pg-hidden");
 
@@ -57,9 +63,14 @@ export class DataView {
 			cls: "pg-breadcrumb-count",
 		});
 
-		this.resultsTable.renderResult(result);
+		this.resultsTable.renderResult(result, columnMeta);
 
-		this.footerEl.textContent = `${result.rowCount} rows | ${result.duration}ms`;
+		let footerText = `Showing ${result.rowCount} rows`;
+		if (totalEstimate !== undefined && totalEstimate > 0) {
+			footerText += ` of ~${totalEstimate.toLocaleString()} total`;
+		}
+		footerText += ` | ${result.duration}ms`;
+		this.footerEl.textContent = footerText;
 	}
 
 	showEmpty(): void {

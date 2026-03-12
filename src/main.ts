@@ -6,14 +6,17 @@ import { PostgresBrowserView } from "./views/database-view";
 import { ConnectionManager } from "./db/connection-manager";
 import { SchemaIntrospection } from "./db/schema-introspection";
 import { QueryExecutor } from "./db/query-executor";
+import { ConnectionSecretStorage } from "./secret-storage";
 
 export default class PostgresBrowserPlugin extends Plugin {
 	settings: PluginSettings = DEFAULT_SETTINGS;
 	connectionManager: ConnectionManager = new ConnectionManager();
 	schemaIntrospection: SchemaIntrospection = new SchemaIntrospection();
 	queryExecutor: QueryExecutor = new QueryExecutor();
+	secretStorage!: ConnectionSecretStorage;
 
 	async onload(): Promise<void> {
+		this.secretStorage = new ConnectionSecretStorage(this.app);
 		await this.loadSettings();
 
 		this.registerView(
@@ -31,6 +34,12 @@ export default class PostgresBrowserPlugin extends Plugin {
 			callback: () => this.activateView(),
 		});
 
+		this.addCommand({
+			id: "open-postgres-browser-window",
+			name: "Open PostgreSQL Browser in New Window",
+			callback: () => this.activateViewInWindow(),
+		});
+
 		this.addSettingTab(new PostgresBrowserSettingTab(this.app, this));
 	}
 
@@ -44,10 +53,44 @@ export default class PostgresBrowserPlugin extends Plugin {
 			DEFAULT_SETTINGS,
 			await this.loadData()
 		);
+
+		let needsSave = false;
+
+		for (const conn of this.settings.connections) {
+			if (conn.isSecured) {
+				const secret = this.secretStorage.retrieve(conn.id);
+				if (secret) {
+					conn.connectionString = secret;
+				} else {
+					console.warn(
+						`[postgres-browser] Secret lost for "${conn.name}" — re-enter the connection string in settings.`
+					);
+					conn.connectionString = "";
+				}
+			} else if (conn.connectionString && this.secretStorage.available) {
+				this.secretStorage.store(conn.id, conn.connectionString);
+				conn.isSecured = true;
+				needsSave = true;
+			}
+		}
+
+		if (needsSave) {
+			await this.saveSettings();
+		}
 	}
 
 	async saveSettings(): Promise<void> {
-		await this.saveData(this.settings);
+		const toSave = structuredClone(this.settings);
+		for (let i = 0; i < toSave.connections.length; i++) {
+			const conn = toSave.connections[i];
+			if (conn.connectionString && this.secretStorage.available) {
+				this.secretStorage.store(conn.id, conn.connectionString);
+				conn.isSecured = true;
+				this.settings.connections[i].isSecured = true;
+				conn.connectionString = "";
+			}
+		}
+		await this.saveData(toSave);
 	}
 
 	async activateView(): Promise<void> {
@@ -65,5 +108,14 @@ export default class PostgresBrowserPlugin extends Plugin {
 			active: true,
 		});
 		workspace.revealLeaf(leaf);
+	}
+
+	async activateViewInWindow(): Promise<void> {
+		const leaf = this.app.workspace.getLeaf("window");
+		await leaf.setViewState({
+			type: VIEW_TYPE_PG_BROWSER,
+			active: true,
+		});
+		this.app.workspace.revealLeaf(leaf);
 	}
 }

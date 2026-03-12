@@ -127,17 +127,16 @@ export class QueryExecutor {
 		}
 	}
 
-	private normalizeError(err: unknown): QueryError {
+	private normalizeError(err: unknown): Error {
 		if (err instanceof Error) {
 			const pgErr = err as unknown as Record<string, unknown>;
-			return {
-				message: pgErr.message as string,
+			return Object.assign(new Error(pgErr.message as string), {
 				code: pgErr.code as string | undefined,
 				detail: pgErr.detail as string | undefined,
 				hint: pgErr.hint as string | undefined,
 				position: pgErr.position as string | undefined,
-			};
+			});
 		}
-		return { message: String(err) };
+		return new Error(String(err));
 	}
 }

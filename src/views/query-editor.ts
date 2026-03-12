@@ -10,7 +10,7 @@ export class QueryEditor {
 		this.textareaEl = container.createEl("textarea", {
 			cls: "pg-query-textarea",
 			attr: {
-				placeholder: "SELECT * FROM ...",
+				placeholder: "Enter a SQL query...",
 				rows: "6",
 				spellcheck: "false",
 			},
@@ -37,7 +37,7 @@ export class QueryEditor {
 		const btnRow = container.createDiv({ cls: "pg-editor-btn-row" });
 
 		this.runBtn = btnRow.createEl("button", {
-			text: "Run Query",
+			text: "Run query",
 			cls: "pg-run-btn mod-cta",
 		});
 		this.runBtn.addEventListener("click", () => this.run());
@@ -57,6 +57,6 @@ export class QueryEditor {
 
 	setLoading(loading: boolean): void {
 		this.runBtn.disabled = loading;
-		this.runBtn.textContent = loading ? "Running..." : "Run Query";
+		this.runBtn.textContent = loading ? "Running..." : "Run query";
 	}
 }

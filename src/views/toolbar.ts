@@ -42,7 +42,7 @@ export class Toolbar {
 		const modeGroup = rightGroup.createDiv({ cls: "pg-mode-group" });
 
 		this.dataTabBtn = modeGroup.createEl("button", {
-			text: "Table Data",
+			text: "Table data",
 			cls: "pg-mode-tab pg-active",
 		});
 		this.dataTabBtn.addEventListener("click", () => {
@@ -51,7 +51,7 @@ export class Toolbar {
 		});
 
 		this.queryTabBtn = modeGroup.createEl("button", {
-			text: "SQL Query",
+			text: "SQL query",
 			cls: "pg-mode-tab",
 		});
 		this.queryTabBtn.addEventListener("click", () => {

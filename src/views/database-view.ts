@@ -31,23 +31,25 @@ export class PostgresBrowserView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return "PostgreSQL Browser";
+		return "PostgreSQL browser";
 	}
 
 	getIcon(): string {
 		return "database";
 	}
 
-	async onOpen(): Promise<void> {
+	onOpen(): Promise<void> {
 		const container = this.contentEl;
 		container.empty();
 		container.addClass("pg-browser");
 
 		this.buildLayout(container);
+		return Promise.resolve();
 	}
 
-	async onClose(): Promise<void> {
+	onClose(): Promise<void> {
 		this.contentEl.empty();
+		return Promise.resolve();
 	}
 
 	private buildLayout(container: HTMLElement): void {
@@ -56,10 +58,10 @@ export class PostgresBrowserView extends ItemView {
 		this.toolbar = new Toolbar(
 			toolbarEl,
 			this.plugin,
-			(id) => this.onConnectionChanged(id),
-			() => this.onRefresh(),
+			(id) => void this.onConnectionChanged(id),
+			() => void this.onRefresh(),
 			(mode) => this.switchMode(mode),
-			() => this.onPopout()
+			() => void this.onPopout()
 		);
 
 		// Body: sidebar | resize handle | main
@@ -70,11 +72,11 @@ export class PostgresBrowserView extends ItemView {
 		this.schemaTree = new SchemaTree(
 			treeContainer,
 			this.plugin,
-			(schema, table) => this.onTableSelected(schema, table)
+			(schema, table) => void this.onTableSelected(schema, table)
 		);
 
 		if (this.plugin.settings.activeConnectionId) {
-			this.loadSchemaTree();
+			void this.loadSchemaTree();
 		} else {
 			this.schemaTree.showEmpty();
 		}
@@ -92,7 +94,7 @@ export class PostgresBrowserView extends ItemView {
 			cls: "pg-query-container pg-hidden",
 		});
 		this.queryView = new QueryView(this.queryContainer, (queryText) =>
-			this.onRunQuery(queryText)
+			void this.onRunQuery(queryText)
 		);
 
 		this.schemaContainer = main.createDiv({
@@ -112,7 +114,7 @@ export class PostgresBrowserView extends ItemView {
 
 		// Load schema detail when switching to schema tab with a table selected
 		if (mode === "schema" && this.currentTable) {
-			this.loadSchemaDetail(
+			void this.loadSchemaDetail(
 				this.currentTable.schema,
 				this.currentTable.table
 			);
@@ -204,7 +206,7 @@ export class PostgresBrowserView extends ItemView {
 			this.switchMode("data");
 		} else if (currentMode === "schema") {
 			// Reload schema detail for new table
-			this.loadSchemaDetail(schema, table);
+			void this.loadSchemaDetail(schema, table);
 		}
 
 		// Always load data preview

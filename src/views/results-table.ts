@@ -144,14 +144,7 @@ export class ResultsTable {
 
 			for (const col of result.columns) {
 				const val = row[col];
-				const display =
-					val === null
-						? "NULL"
-						: val === undefined
-							? ""
-							: typeof val === "object"
-								? JSON.stringify(val)
-								: String(val);
+				const display = stringifyValue(val);
 				const td = tr.createEl("td", { text: display });
 				if (val === null) td.addClass("pg-null-value");
 
@@ -186,7 +179,7 @@ export class ResultsTable {
 			text: "Save changes",
 			cls: "pg-save-btn",
 		});
-		saveBtn.addEventListener("click", () => this.batchSave());
+		saveBtn.addEventListener("click", () => void this.batchSave());
 
 		const discardBtn = bar.createEl("button", {
 			text: "Discard",
@@ -419,6 +412,13 @@ export class ResultsTable {
 		this.saveBarEl = null;
 		this.saveBarTextEl = null;
 	}
+}
+
+function stringifyValue(val: unknown): string {
+	if (val === null) return "NULL";
+	if (val === undefined) return "";
+	if (typeof val === "object") return JSON.stringify(val);
+	return String(val);
 }
 
 function formatDataType(col: ColumnInfo): string {

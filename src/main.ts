@@ -24,27 +24,27 @@ export default class PostgresBrowserPlugin extends Plugin {
 			(leaf: WorkspaceLeaf) => new PostgresBrowserView(leaf, this)
 		);
 
-		this.addRibbonIcon("database", "Open PostgreSQL Browser", () => {
-			this.activateView();
+		this.addRibbonIcon("database", "Open PostgreSQL browser", () => {
+			void this.activateView();
 		});
 
 		this.addCommand({
-			id: "open-postgres-browser",
-			name: "Open PostgreSQL Browser",
-			callback: () => this.activateView(),
+			id: "open-view",
+			name: "Open",
+			callback: () => { void this.activateView(); },
 		});
 
 		this.addCommand({
-			id: "open-postgres-browser-window",
-			name: "Open PostgreSQL Browser in New Window",
-			callback: () => this.activateViewInWindow(),
+			id: "open-in-new-window",
+			name: "Open in new window",
+			callback: () => { void this.activateViewInWindow(); },
 		});
 
 		this.addSettingTab(new PostgresBrowserSettingTab(this.app, this));
 	}
 
-	async onunload(): Promise<void> {
-		await this.connectionManager.disconnectAll();
+	onunload(): void {
+		void this.connectionManager.disconnectAll();
 	}
 
 	async loadSettings(): Promise<void> {
@@ -102,7 +102,7 @@ export default class PostgresBrowserPlugin extends Plugin {
 
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE_PG_BROWSER);
 		if (leaves.length > 0) {
-			workspace.revealLeaf(leaves[0]);
+			await workspace.revealLeaf(leaves[0]);
 			return;
 		}
 
@@ -111,7 +111,7 @@ export default class PostgresBrowserPlugin extends Plugin {
 			type: VIEW_TYPE_PG_BROWSER,
 			active: true,
 		});
-		workspace.revealLeaf(leaf);
+		await workspace.revealLeaf(leaf);
 	}
 
 	async activateViewInWindow(): Promise<void> {
@@ -120,6 +120,6 @@ export default class PostgresBrowserPlugin extends Plugin {
 			type: VIEW_TYPE_PG_BROWSER,
 			active: true,
 		});
-		this.app.workspace.revealLeaf(leaf);
+		await this.app.workspace.revealLeaf(leaf);
 	}
 }

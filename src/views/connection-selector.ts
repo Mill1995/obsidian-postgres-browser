@@ -40,7 +40,7 @@ export class ConnectionSelector {
 
 		this.selectEl.createEl("option", {
 			value: "",
-			text: "-- Select Connection --",
+			text: "-- Select connection --",
 		});
 
 		for (const conn of this.plugin.settings.connections) {

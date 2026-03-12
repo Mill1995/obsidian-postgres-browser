@@ -44,5 +44,5 @@ Three layers with clear separation:
 - All TypeScript interfaces live in `src/types.ts`
 - Constants and defaults in `src/constants.ts`
 - UI uses Obsidian CSS variables for theming (no external CSS framework)
-- Connection strings stored as plaintext in vault's `data.json` (no secure credential API available in Obsidian)
+- Connection strings encrypted via OS keychain using `src/secret-storage.ts` (Obsidian v1.11.4+); falls back to plaintext in `data.json` on older versions
 - The plugin's view type ID is defined in `constants.ts` as `VIEW_TYPE_POSTGRES`

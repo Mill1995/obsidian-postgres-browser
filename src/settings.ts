@@ -100,7 +100,7 @@ export class PostgresBrowserSettingTab extends PluginSettingTab {
 
     const connStringSetting = new Setting(section)
       .setName("Connection string")
-      .setDesc("Enter a PostgreSQL connection string.")
+      .setDesc("Enter a connection string.")
       .addText((text) => {
         text.inputEl.type = "password";
         text.inputEl.addClass("pg-conn-string-input");

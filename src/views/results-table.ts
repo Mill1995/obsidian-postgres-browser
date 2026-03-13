@@ -418,7 +418,7 @@ function stringifyValue(val: unknown): string {
 	if (val === null) return "NULL";
 	if (val === undefined) return "";
 	if (typeof val === "object") return JSON.stringify(val);
-	return String(val);
+	return String(val as string | number | boolean | bigint);
 }
 
 function formatDataType(col: ColumnInfo): string {

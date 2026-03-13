@@ -48,11 +48,8 @@ export default class PostgresBrowserPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData()
-		);
+		const saved = (await this.loadData()) as Partial<PluginSettings> | null;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, saved ?? {});
 
 		// Clamp numeric settings to valid ranges (protects against tampered data.json)
 		this.settings.queryTimeoutSeconds = Math.max(1, Math.min(300, Math.round(this.settings.queryTimeoutSeconds || DEFAULT_SETTINGS.queryTimeoutSeconds)));

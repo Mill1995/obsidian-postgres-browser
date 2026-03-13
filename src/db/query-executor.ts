@@ -1,5 +1,5 @@
 import type { Sql } from "postgres";
-import type { QueryResult, QueryError } from "../types";
+import type { QueryResult } from "../types";
 import { quoteIdent } from "./sql-utils";
 
 export class QueryExecutor {
